@@ -13,6 +13,7 @@ import java.util.Scanner;
 public class Server {
     List<User> clients = new ArrayList<User>();
     List<String> msgHistory = new ArrayList<String>();
+    List<String> nicknameList = new ArrayList<String>();
 
     private Server(int port) throws IOException {
         ServerSocket serverSocket = new ServerSocket(port);
@@ -40,14 +41,9 @@ public class Server {
         }
     }
 
-    void greet(User user) throws IOException {
-        PrintStream streamOut = new PrintStream(user.socket.getOutputStream());
-        streamOut.println("You successful connected to chat! Please set uo your nickname with command (/nickname)");
-    }
-
-    void promtNickname(User user) throws IOException {
-        PrintStream streamOut = new PrintStream(user.socket.getOutputStream());
-        streamOut.println("Please set up your nickname with command (/nickname)");
+    void allert(User user, String message) throws IOException {
+        PrintStream streamout = new PrintStream((user.socket.getOutputStream()));
+        streamout.println(message);
     }
 
     public static void main(String[] args) throws IOException {
@@ -76,7 +72,7 @@ class ClientHandler implements Runnable {
         }
 
         try {
-            this.serverSocket.greet(this.client);
+            this.serverSocket.allert(this.client, "You successful connected to chat! Please set uo your nickname with command (/nickname)");
         } catch (IOException e) {
             e.printStackTrace();
         }
@@ -89,15 +85,16 @@ class ClientHandler implements Runnable {
                 //System.out.println(msg);
                 if (this.client.nickname == null) {
                     if (msg.contains("/nickname")) {
-                        String nickname = msg.replace("/nickname", "").trim();
-
-                        /// TODO: 4/15/2018 check nickname is empty
-                        /// TODO: 4/15/2018 check nickname is free
-
-
-                        this.client.nickname = nickname;
+                        msg = msg.replace("/nickname", "").trim();
+                        if (this.serverSocket.nicknameList.contains(msg)) {
+                            this.serverSocket.allert(this.client, "This nickname is used, chose another user name");
+                        } else {
+                            String nickname = msg;
+                            this.serverSocket.nicknameList.add(nickname);
+                            this.client.nickname = nickname;
+                        }
                     } else {
-                        this.serverSocket.promtNickname(this.client);
+                        this.serverSocket.allert(this.client, "Please set up your nickname with command (/nickname)");
                     }
                 } else {
                     if (msg.contains("/nickname")) {
